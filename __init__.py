@@ -12,14 +12,16 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 bl_info = {
-    "name" : "mesh volume calculator",
+    "name" : "Mesh Volume Calculator",
     "author" : "Davide Mazzitelli",
-    "description" : "Calculate the volume of the active object and show the result in the 'Volume' panel, than stores this data, the object name, and reder images in a database file (Volumes.db); the db file is generated if not already exists",
+    "description" : '''Calculate the volume of the active object and show the result in the
+                    'Volume' panel, than stores this data, the object name, reder images from multiple viewpoints
+                    and the date of acquisition in a database file (Volumes.db); the db file is generated if not already exists''',
     "blender" : (3, 10, 0),
-    "version" : (0, 0, 1),
+    "version" : (1, 0),
     "location" : "3D Viewport ‣ Sidebar",
     "warning" : "",
-    "category" : "Import-Export"
+    "category" : "Mesh"
 }
 
 import bpy
@@ -28,16 +30,36 @@ from . import (
     ui
 )
 
-classes = (ui.VolumePanel,
+
+class CustomProp(bpy.types.PropertyGroup):
+    backgroundMenu : bpy.props.EnumProperty(
+            name = "",
+            description="Select background",
+            items=[
+                ("wooden lounge", 'wooden lounge', ""),
+                ("lebombo", 'lebombo', ""),
+                ("christmas photo studio", 'christmas photo studio',""),
+                ("tv studio", 'tv studio', ""),
+                ("clourful studio", 'clourful studio', "")
+            ]
+        )
+
+classes = [CustomProp, 
+    ui.VolumePanel,
+    ui.BackgroundPanel,
     operators.MeshVolume,
-    operators.SaveInfo
-)
+    operators.SaveInfo,
+    operators.UnionOp,
+    operators.ChooseBackground,
+    operators.Export
+    ]
 
 def register():
     for c in classes:
         bpy.utils.register_class(c)
 
-    bpy.types.Object.volume = bpy.props.FloatProperty(name = "Volume Property")
+    bpy.types.Object.volume = bpy.props.FloatProperty()
+    bpy.types.Scene.background = bpy.props.PointerProperty(type=CustomProp)
 
 
 def unregister():
@@ -45,6 +67,7 @@ def unregister():
         bpy.utils.unregister_class(c)
 
     del bpy.types.Object.volume
+    del bpy.types.Scene.background
 
 if __name__ == "__main__":
     register()
